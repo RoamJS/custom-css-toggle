@@ -1,25 +1,45 @@
 {
-  "name": "extension-base",
+  "name": "custom-css-toggle",
   "version": "1.0.0",
-  "description": "Stock RoamJS Roam Research Extension base — fork this repo to start new extensions.",
+  "description": "Personal stylesheets, visual CSS editing, live preview, and element picking for Roam Research.",
   "main": "index.js",
   "scripts": {
-    "postinstall": "patch-package",
     "start": "samepage dev",
-    "prebuild:roam": "npm install",
     "build:roam": "samepage build --dry",
-    "test": "samepage test"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write src tests README.md CHANGELOG.md package.json .github/workflows/check.yaml"
   },
-  "keywords": ["roam", "roam-research", "roamjs"],
+  "keywords": [
+    "roam",
+    "roam-research",
+    "roamjs"
+  ],
   "license": "MIT",
   "dependencies": {
-    "roamjs-components": "^0.86.4"
+    "roamjs-components": "^0.86.4",
+    "codemirror": "^6.0.2",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/view": "^6.38.6",
+    "@codemirror/state": "^6.5.2",
+    "postcss": "^8.5.6",
+    "@blueprintjs/core": "3.50.4",
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.6.11"
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "vitest": "^3.2.4",
+    "jsdom": "^20.0.3",
+    "typescript": "^5.9.3",
+    "@types/react": "17.0.39",
+    "@types/react-dom": "17.0.13"
   },
   "samepage": {
     "extends": "node_modules/roamjs-components/package.json"
+  },
+  "overrides": {
+    "@testing-library/react": "12.1.5"
   }
 }
