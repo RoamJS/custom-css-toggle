@@ -623,7 +623,11 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                       id="source"
                       title="CSS source"
                       panel={
-                        <CodeEditor value={draftCss} onChange={setDraftCss} />
+                        <CodeEditor
+                          key={selected.id}
+                          value={draftCss}
+                          onChange={setDraftCss}
+                        />
                       }
                     />
                   </Tabs>

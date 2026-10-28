@@ -108,7 +108,39 @@ describe("visual CSS editing", () => {
     );
     expect(changed).toContain("color: green");
     expect(changed).toContain("color: black");
-    expect(changed).not.toContain("!important");
+    expect(changed).toContain("red !important");
+  });
+  it("clears properties across duplicate top-level selectors", () => {
+    const css =
+      ".foo { color: red; } .foo { font-size: 16px; } @media print { .foo { color: black; } }";
+    const changed = updateDeclaration({
+      css,
+      selector: ".foo",
+      property: "color",
+      value: "",
+    });
+    expect(
+      readDeclarations({ css: changed, selector: ".foo" }).color,
+    ).toBeUndefined();
+    expect(changed).toContain("font-size: 16px");
+    expect(changed).toContain("color: black");
+  });
+  it("honors and preserves important values across duplicate selectors", () => {
+    const css =
+      ".foo { color: red !important; } .foo { color: blue; padding: 4px; }";
+    expect(readDeclarations({ css, selector: ".foo" }).color).toBe("red");
+    const changed = updateDeclaration({
+      css,
+      selector: ".foo",
+      property: "color",
+      value: "green",
+    });
+    expect(changed).toContain("green !important");
+    expect(changed).not.toContain("color: red");
+    expect(changed).not.toContain("color: blue");
+    expect(readDeclarations({ css: changed, selector: ".foo" }).color).toBe(
+      "green",
+    );
   });
   it("adds and removes properties without losing comments", () => {
     const changed = updateDeclaration({
