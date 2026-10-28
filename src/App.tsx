@@ -96,6 +96,8 @@ const PropertyField = ({
 };
 const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
   const [library, setLibrary] = useState(initial);
+  const emergencyEpoch = useRef(0);
+  const renderEpoch = emergencyEpoch.current;
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(initial.sheets[0]?.id || "");
   const [draftCss, setDraftCss] = useState(initial.sheets[0]?.css || "");
@@ -131,6 +133,8 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
     [],
   );
   const persist = (next: Library): boolean => {
+    // Deferred imports and confirmations must not undo an emergency pause.
+    if (renderEpoch !== emergencyEpoch.current) return false;
     try {
       save(next);
       setLibrary(next);
@@ -162,6 +166,8 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
       resetDraft(selected);
     });
   const emergency = (): void => {
+    emergencyEpoch.current += 1;
+    setPending(null);
     resizeCleanup.current?.();
     pickerCleanup.current?.();
     setPreview(false);

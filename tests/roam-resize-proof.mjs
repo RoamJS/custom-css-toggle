@@ -74,8 +74,90 @@ export default {
       await page
         .getByRole("button", { name: "Resume CSS", exact: true })
         .waitFor();
-      return { emergencyDuringResize: "passed", stylesAfterRelease: styles };
+      await page
+        .getByRole("button", { name: "Resume CSS", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Delete stylesheet", exact: true })
+        .click();
+      await page.keyboard.press("Control+Alt+Shift+KeyC");
+      await page
+        .getByRole("button", { name: "Resume CSS", exact: true })
+        .waitFor();
+      const confirm = page.getByRole("button", {
+        name: "Discard / continue",
+        exact: true,
+      });
+      if (await confirm.count()) await confirm.click();
+      if (
+        (await page.locator("[data-cct-styles] style").count()) !== 0 ||
+        !(await page
+          .getByRole("button", { name: "Resume CSS", exact: true })
+          .count())
+      ) {
+        throw new Error(
+          "A pending confirmation restored CSS after emergency pause",
+        );
+      }
+      if (!(await page.getByRole("button", { name, exact: true }).count()))
+        throw new Error("Emergency pause did not cancel pending deletion");
+      await page
+        .getByRole("button", { name: "Resume CSS", exact: true })
+        .click();
+      await page.evaluate(() => {
+        window.__cctOriginalFileText = File.prototype.text;
+        File.prototype.text = function () {
+          const file = this;
+          return new Promise((resolve) => {
+            window.__cctReleaseImport = async () =>
+              resolve(await window.__cctOriginalFileText.call(file));
+          });
+        };
+      });
+      await page
+        .locator('input[type="file"]')
+        .setInputFiles({
+          name: "Late pause import.css",
+          mimeType: "text/css",
+          buffer: Buffer.from("body { --cct-late-import: 1; }"),
+        });
+      await page.waitForFunction(
+        () => typeof window.__cctReleaseImport === "function",
+      );
+      await page.keyboard.press("Control+Alt+Shift+KeyC");
+      await page.evaluate(async () => {
+        await window.__cctReleaseImport();
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+      });
+      if (
+        (await page.locator("[data-cct-styles] style").count()) !== 0 ||
+        !(await page
+          .getByRole("button", { name: "Resume CSS", exact: true })
+          .count())
+      )
+        throw new Error("A delayed import restored CSS after emergency pause");
+      if (
+        await page
+          .getByRole("button", { name: "Late pause import", exact: true })
+          .count()
+      )
+        throw new Error(
+          "An import started before emergency pause was committed afterward",
+        );
+      return {
+        emergencyDuringResize: "passed",
+        emergencyDuringPendingDeletion: "passed",
+        emergencyDuringDelayedImport: "passed",
+        stylesAfterRelease: styles,
+      };
     } finally {
+      await page.evaluate(() => {
+        if (window.__cctOriginalFileText)
+          File.prototype.text = window.__cctOriginalFileText;
+        delete window.__cctOriginalFileText;
+        delete window.__cctReleaseImport;
+      });
       await page.mouse.up();
       if (
         await page
@@ -86,12 +168,20 @@ export default {
           .getByRole("button", { name: "Resume CSS", exact: true })
           .click();
       }
-      await page
-        .getByRole("button", { name: "Delete stylesheet", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Discard / continue", exact: true })
-        .click();
+      for (const ownedName of ["Late pause import", name]) {
+        const owned = page.getByRole("button", {
+          name: ownedName,
+          exact: true,
+        });
+        if (!(await owned.count())) continue;
+        await owned.click();
+        await page
+          .getByRole("button", { name: "Delete stylesheet", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Discard / continue", exact: true })
+          .click();
+      }
       await page
         .locator('select[aria-label="Editor position"]')
         .selectOption(previousDock);

@@ -12,7 +12,7 @@ Create and toggle personal CSS stylesheets in Roam Research without changing any
 
 Unsaved edits prompt before switching or closing. Previewing a disabled file temporarily applies it while the editor is open. Turning preview off or closing the drawer restores the saved enabled styles.
 
-Use **Pause all**, the command **Custom CSS Toggle: Pause all CSS**, or **Ctrl/⌘ + Alt + Shift + C** to remove personal CSS immediately. The shortcut works even if your CSS hides the editor. Resume with **Resume CSS**.
+Use **Pause all**, the command **Custom CSS Toggle: Pause all CSS**, or **Ctrl/⌘ + Alt + Shift + C** to remove personal CSS immediately. The shortcut works even if your CSS hides the editor. Emergency pause also cancels pending confirmations and imports already being read. Resume with **Resume CSS**.
 
 ## Personal storage
 
