@@ -24,7 +24,9 @@ export default {
       await page
         .getByRole("button", { name: "Resume CSS", exact: true })
         .click();
-    const previousDock = await page.getByLabel("Editor position").inputValue();
+    const previousDock = await page
+      .locator('select[aria-label="Editor position"]')
+      .inputValue();
     const previousName = await page
       .getByRole("textbox", { name: "Stylesheet name" })
       .inputValue()
@@ -39,7 +41,9 @@ export default {
         .getByRole("textbox", { name: "CSS source" })
         .fill("body { --cct-resize-proof: 1; }");
       await page.getByRole("button", { name: "Save", exact: true }).click();
-      await page.getByLabel("Editor position").selectOption("right");
+      await page
+        .locator('select[aria-label="Editor position"]')
+        .selectOption("right");
       await page.waitForFunction(() =>
         document
           .querySelector("[data-cct-styles]")
@@ -88,7 +92,9 @@ export default {
       await page
         .getByRole("button", { name: "Discard / continue", exact: true })
         .click();
-      await page.getByLabel("Editor position").selectOption(previousDock);
+      await page
+        .locator('select[aria-label="Editor position"]')
+        .selectOption(previousDock);
       if (previousName)
         await page
           .getByRole("button", { name: previousName, exact: true })
