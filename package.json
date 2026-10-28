@@ -37,7 +37,19 @@
     "@types/react-dom": "17.0.13"
   },
   "samepage": {
-    "extends": "node_modules/roamjs-components/package.json"
+    "external": [
+      "@blueprintjs/core=window.Blueprint.Core",
+      "react=window.React",
+      "react-dom=window.ReactDOM",
+      "tslib=window.TSLib"
+    ],
+    "include": [
+      "package.json",
+      "README.md"
+    ],
+    "out": "extension",
+    "mirror": ".",
+    "format": "esm"
   },
   "overrides": {
     "@testing-library/react": "12.1.5"
