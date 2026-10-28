@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "samepage dev",
-    "build:roam": "samepage build --dry",
+    "build:roam": "samepage build --dry && node -e \"require('node:fs').accessSync('dist/extension.js')\"",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write src tests README.md CHANGELOG.md package.json .github/workflows/check.yaml"
