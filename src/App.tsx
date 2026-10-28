@@ -162,6 +162,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
       resetDraft(selected);
     });
   const emergency = (): void => {
+    resizeCleanup.current?.();
     pickerCleanup.current?.();
     setPreview(false);
     const next = { ...library, suspended: true };
