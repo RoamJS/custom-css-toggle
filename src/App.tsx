@@ -96,8 +96,10 @@ const PropertyField = ({
 };
 const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
   const [library, setLibrary] = useState(initial);
-  const emergencyEpoch = useRef(0);
-  const renderEpoch = emergencyEpoch.current;
+  const currentLibrary = useRef(initial);
+  const currentDraftIsDirty = useRef(false);
+  const operationEpoch = useRef(0);
+  const renderEpoch = operationEpoch.current;
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(initial.sheets[0]?.id || "");
   const [draftCss, setDraftCss] = useState(initial.sheets[0]?.css || "");
@@ -118,6 +120,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
   const declarations = readDeclarations({ css: draftCss, selector });
   const dirty =
     !!selected && (draftCss !== selected.css || draftName !== selected.name);
+  currentDraftIsDirty.current = dirty;
   const live =
     open && preview && selected && !syntaxError
       ? { id: selected.id, css: draftCss }
@@ -127,17 +130,23 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
   }, [library, open, preview, selectedId, draftCss, syntaxError]);
   useEffect(
     () => () => {
+      operationEpoch.current += 1;
       pickerCleanup.current?.();
       resizeCleanup.current?.();
     },
     [],
   );
-  const persist = (next: Library): boolean => {
+  const updateLibrary = (next: Library): void => {
+    currentLibrary.current = next;
+    setLibrary(next);
+  };
+  const persist = (update: (current: Library) => Library): boolean => {
     // Deferred imports and confirmations must not undo an emergency pause.
-    if (renderEpoch !== emergencyEpoch.current) return false;
+    if (renderEpoch !== operationEpoch.current) return false;
     try {
+      const next = update(currentLibrary.current);
       save(next);
-      setLibrary(next);
+      updateLibrary(next);
       setError("");
       return true;
     } catch {
@@ -166,15 +175,15 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
       resetDraft(selected);
     });
   const emergency = (): void => {
-    emergencyEpoch.current += 1;
+    operationEpoch.current += 1;
     setPending(null);
     resizeCleanup.current?.();
     pickerCleanup.current?.();
     setPreview(false);
-    const next = { ...library, suspended: true };
+    const next = { ...currentLibrary.current, suspended: true };
     // Removing styles must work even when browser storage is full or unavailable.
+    updateLibrary(next);
     apply(next);
-    setLibrary(next);
     try {
       save(next);
       setError("");
@@ -188,21 +197,27 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
   useEffect(() => {
     register({ open: () => setOpen(true), emergency });
   }, [library]);
-  const addSheet = (sheet: Stylesheet): void => {
-    if (persist({ ...library, sheets: [...library.sheets, sheet] }))
+  const addSheet = (sheet: Stylesheet, preserveDraft = false): void => {
+    if (
+      persist((current) => ({
+        ...current,
+        sheets: [...current.sheets, sheet],
+      })) &&
+      (!preserveDraft || !currentDraftIsDirty.current)
+    )
       resetDraft(sheet);
   };
   const saveDraft = (): void => {
     if (!selected || syntaxError || !draftName.trim()) return;
     if (
-      persist({
-        ...library,
-        sheets: library.sheets.map((s) =>
+      persist((current) => ({
+        ...current,
+        sheets: current.sheets.map((s) =>
           s.id === selectedId
             ? { ...s, css: draftCss, name: draftName.trim() }
             : s,
         ),
-      })
+      }))
     )
       setDraftName(draftName.trim());
   };
@@ -272,15 +287,19 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
         240,
         Math.min(window.innerHeight - 24, start.bottom + start.y - e.clientY),
       );
-      next = { ...library, sideSize, bottomSize };
-      setLibrary(next);
+      next = { ...currentLibrary.current, sideSize, bottomSize };
+      updateLibrary(next);
     };
     const stop = (): void => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", stop);
       window.removeEventListener("pointercancel", stop);
       resizeCleanup.current = null;
-      persist(next);
+      persist((current) => ({
+        ...current,
+        sideSize: next.sideSize,
+        bottomSize: next.bottomSize,
+      }));
     };
     resizeCleanup.current = stop;
     window.addEventListener("pointermove", move);
@@ -297,30 +316,30 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
       return;
     e.preventDefault();
     if (bottom)
-      persist({
-        ...library,
+      persist((current) => ({
+        ...current,
         bottomSize: Math.max(
           240,
           Math.min(
             window.innerHeight - 24,
-            library.bottomSize + (e.key === "ArrowUp" ? 24 : -24),
+            current.bottomSize + (e.key === "ArrowUp" ? 24 : -24),
           ),
         ),
-      });
+      }));
     else
-      persist({
-        ...library,
+      persist((current) => ({
+        ...current,
         sideSize: Math.max(
           320,
           Math.min(
             window.innerWidth - 24,
-            library.sideSize +
-              ((e.key === "ArrowRight") === (library.dock === "left")
+            current.sideSize +
+              ((e.key === "ArrowRight") === (current.dock === "left")
                 ? 24
                 : -24),
           ),
         ),
-      });
+      }));
   };
   const position =
     library.dock === "left"
@@ -371,7 +390,10 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
               value={library.dock}
               onChange={(e) => {
                 pickerCleanup.current?.();
-                persist({ ...library, dock: e.target.value as Dock });
+                persist((current) => ({
+                  ...current,
+                  dock: e.target.value as Dock,
+                }));
               }}
               options={[
                 { label: "Dock left", value: "left" },
@@ -385,7 +407,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
               icon={library.suspended ? "play" : "pause"}
               onClick={() =>
                 library.suspended
-                  ? persist({ ...library, suspended: false })
+                  ? persist((current) => ({ ...current, suspended: false }))
                   : emergency()
               }
             >
@@ -425,14 +447,14 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                       checked={sheet.enabled}
                       aria-label={`Enable ${sheet.name}`}
                       onChange={() =>
-                        persist({
-                          ...library,
-                          sheets: library.sheets.map((s) =>
+                        persist((current) => ({
+                          ...current,
+                          sheets: current.sheets.map((s) =>
                             s.id === sheet.id
                               ? { ...s, enabled: !s.enabled }
                               : s,
                           ),
-                        })
+                        }))
                       }
                     />
                     <Button
@@ -483,6 +505,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                         name: imported.name.replace(/\.css$/i, ""),
                         css,
                       }),
+                      true,
                     );
                   } catch {
                     setError("Could not read the selected file.");
@@ -530,10 +553,15 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                       aria-label="Delete stylesheet"
                       onClick={() =>
                         setPending(() => () => {
-                          const sheets = library.sheets.filter(
-                            (s) => s.id !== selected.id,
-                          );
-                          if (persist({ ...library, sheets }))
+                          let sheets: Stylesheet[] = [];
+                          if (
+                            persist((current) => {
+                              sheets = current.sheets.filter(
+                                (s) => s.id !== selected.id,
+                              );
+                              return { ...current, sheets };
+                            })
+                          )
                             resetDraft(sheets[0]);
                         })
                       }

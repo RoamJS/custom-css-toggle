@@ -114,13 +114,11 @@ export default {
           });
         };
       });
-      await page
-        .locator('input[type="file"]')
-        .setInputFiles({
-          name: "Late pause import.css",
-          mimeType: "text/css",
-          buffer: Buffer.from("body { --cct-late-import: 1; }"),
-        });
+      await page.locator('input[type="file"]').setInputFiles({
+        name: "Late pause import.css",
+        mimeType: "text/css",
+        buffer: Buffer.from("body { --cct-late-import: 1; }"),
+      });
       await page.waitForFunction(
         () => typeof window.__cctReleaseImport === "function",
       );
