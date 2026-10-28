@@ -7,6 +7,7 @@ export default `
 .cct-personal { color: #526b7a; margin-right: auto; font-size: 12px; }
 .cct-layout { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 .cct-library { width: 155px; flex-shrink: 0; display: flex; flex-direction: column; padding: 12px 8px; gap: 10px; border-right: 1px solid #d8e1e8; background: #f6f8fa; }
+.cct-library input[type=file] { display: none; }
 .cct-library-heading { display: flex; align-items: center; justify-content: space-between; }
 .cct-sheet-list { flex: 1; overflow: auto; min-height: 70px; }
 .cct-sheet { display: flex; gap: 3px; align-items: center; margin: 2px 0; border-radius: 4px; padding: 4px; }

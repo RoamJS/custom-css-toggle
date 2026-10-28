@@ -57,6 +57,7 @@ export const startPicker = ({
   const overlay = document.createElement("div");
   overlay.dataset.cctOwned = "true";
   overlay.className = "cct-highlight";
+  overlay.hidden = true;
   document.body.appendChild(overlay);
   let target: Element | null = null;
   let ended = false;

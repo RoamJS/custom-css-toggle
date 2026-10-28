@@ -187,14 +187,17 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
   };
   const saveDraft = (): void => {
     if (!selected || syntaxError || !draftName.trim()) return;
-    persist({
-      ...library,
-      sheets: library.sheets.map((s) =>
-        s.id === selectedId
-          ? { ...s, css: draftCss, name: draftName.trim() }
-          : s,
-      ),
-    });
+    if (
+      persist({
+        ...library,
+        sheets: library.sheets.map((s) =>
+          s.id === selectedId
+            ? { ...s, css: draftCss, name: draftName.trim() }
+            : s,
+        ),
+      })
+    )
+      setDraftName(draftName.trim());
   };
   const pick = (): void => {
     if (picking) {
@@ -278,15 +281,23 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
     window.addEventListener("pointercancel", stop);
   };
   const resizeKey = (e: React.KeyboardEvent<HTMLDivElement>): void => {
-    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key))
+    const bottom = library.dock === "bottom";
+    if (
+      !(
+        bottom ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"]
+      ).includes(e.key)
+    )
       return;
     e.preventDefault();
-    if (library.dock === "bottom")
+    if (bottom)
       persist({
         ...library,
         bottomSize: Math.max(
           240,
-          library.bottomSize + (e.key === "ArrowUp" ? 24 : -24),
+          Math.min(
+            window.innerHeight - 24,
+            library.bottomSize + (e.key === "ArrowUp" ? 24 : -24),
+          ),
         ),
       });
     else
@@ -294,8 +305,13 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
         ...library,
         sideSize: Math.max(
           320,
-          library.sideSize +
-            ((e.key === "ArrowRight") === (library.dock === "left") ? 24 : -24),
+          Math.min(
+            window.innerWidth - 24,
+            library.sideSize +
+              ((e.key === "ArrowRight") === (library.dock === "left")
+                ? 24
+                : -24),
+          ),
         ),
       });
   };
