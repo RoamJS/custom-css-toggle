@@ -94,6 +94,27 @@ describe("personal library", () => {
   });
 });
 describe("visual CSS editing", () => {
+  it("lets explicit visual edits override theme specificity without changing other declarations", () => {
+    const changed = updateDeclaration({
+      css: ".rm-title-display { padding: 4px; } .other { color: black; }",
+      selector: ".rm-title-display",
+      property: "color",
+      value: "red",
+      forceImportant: true,
+    });
+    expect(changed).toContain("color: red !important");
+    expect(changed).toContain("padding: 4px;");
+    expect(changed).toContain(".other { color: black; }");
+    expect(
+      updateDeclaration({
+        css: changed,
+        selector: ".rm-title-display",
+        property: "color",
+        value: "",
+        forceImportant: true,
+      }),
+    ).not.toContain("!important");
+  });
   it("edits matching top-level declarations and preserves unrelated/nested rules", () => {
     const css =
       ".title { color: blue !important; } @media (min-width: 800px) { .title { color: green; } } .other { color: black; }";
@@ -178,15 +199,15 @@ describe("picker", () => {
     expect(document.querySelectorAll(getSelector(target))).toHaveLength(1);
     expect(document.querySelector(getSelector(target))).toBe(target);
   });
-  it("escapes unusual IDs and handles duplicate IDs/classes", () => {
+  it("escapes unusual IDs and uses classes when IDs are duplicated", () => {
     document.body.innerHTML =
       '<div id="1:a"></div><section><p id="dupe" class="same"></p><p id="dupe" class="same"></p></section>';
     expect(
       document.querySelector(getSelector(document.querySelector("div")!)),
     ).toBe(document.querySelector("div"));
     const target = document.querySelectorAll("p")[1];
-    expect(document.querySelectorAll(getSelector(target))).toHaveLength(1);
-    expect(document.querySelector(getSelector(target))).toBe(target);
+    expect(getSelector(target)).toBe(".same");
+    expect(document.querySelectorAll(getSelector(target))).toHaveLength(2);
   });
   it("suppresses selected clicks and cleans up after picking or Escape", () => {
     const button = document.createElement("button");

@@ -22,11 +22,13 @@ export const updateDeclaration = ({
   selector,
   property,
   value,
+  forceImportant = false,
 }: {
   css: string;
   selector: string;
   property: string;
   value: string;
+  forceImportant?: boolean;
 }): string => {
   const root = postcss.parse(css, { from: undefined });
   const matching: postcss.Rule[] = [];
@@ -39,7 +41,7 @@ export const updateDeclaration = ({
     root.append(target);
     matching.push(target);
   }
-  let important = false;
+  let important = forceImportant;
   matching.forEach((rule) => {
     rule.each((node) => {
       if (node.type !== "decl" || node.prop !== property) return;

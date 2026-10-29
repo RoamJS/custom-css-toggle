@@ -3,6 +3,10 @@ export default {
   runtimeNames: ["custom-css-toggle"],
   settingsTab: "Custom CSS Toggle",
   async run({ page }) {
+    const pauseShortcut =
+      process.platform === "darwin"
+        ? "Meta+Alt+Shift+KeyC"
+        : "Control+Alt+Shift+KeyC";
     const name = `Resize pause proof ${Date.now()}`;
     const drawer = page.locator(".cct-drawer");
     if (!(await drawer.count())) {
@@ -58,7 +62,7 @@ export default {
       await page.mouse.move(handle.x - 40, handle.y + handle.height / 2, {
         steps: 4,
       });
-      await page.keyboard.press("Control+Alt+Shift+KeyC");
+      await page.keyboard.press(pauseShortcut);
       await page
         .getByRole("button", { name: "Resume CSS", exact: true })
         .waitFor();
@@ -80,7 +84,7 @@ export default {
       await page
         .getByRole("button", { name: "Delete stylesheet", exact: true })
         .click();
-      await page.keyboard.press("Control+Alt+Shift+KeyC");
+      await page.keyboard.press(pauseShortcut);
       await page
         .getByRole("button", { name: "Resume CSS", exact: true })
         .waitFor();
@@ -122,7 +126,7 @@ export default {
       await page.waitForFunction(
         () => typeof window.__cctReleaseImport === "function",
       );
-      await page.keyboard.press("Control+Alt+Shift+KeyC");
+      await page.keyboard.press(pauseShortcut);
       await page.evaluate(async () => {
         await window.__cctReleaseImport();
         await new Promise(requestAnimationFrame);

@@ -1,3 +1,9 @@
+import {
+  DEFAULT_LIBRARY_SIZE,
+  MAX_LIBRARY_SIZE,
+  MIN_LIBRARY_SIZE,
+} from "./layout";
+
 export type Stylesheet = {
   id: string;
   name: string;
@@ -11,6 +17,7 @@ export type Library = {
   dock: Dock;
   sideSize: number;
   bottomSize: number;
+  librarySize: number;
   suspended: boolean;
 };
 export const emptyLibrary = (): Library => ({
@@ -19,6 +26,7 @@ export const emptyLibrary = (): Library => ({
   dock: "right",
   sideSize: 540,
   bottomSize: 440,
+  librarySize: DEFAULT_LIBRARY_SIZE,
   suspended: false,
 });
 export const storageKey = ({
@@ -69,6 +77,10 @@ export const readLibrary = (raw: string | null): Library => {
       typeof v.bottomSize === "number" && Number.isFinite(v.bottomSize)
         ? Math.max(240, Math.min(1200, v.bottomSize))
         : 440,
+    librarySize:
+      typeof v.librarySize === "number" && Number.isFinite(v.librarySize)
+        ? Math.max(MIN_LIBRARY_SIZE, Math.min(MAX_LIBRARY_SIZE, v.librarySize))
+        : DEFAULT_LIBRARY_SIZE,
     suspended: v.suspended === true,
   };
 };

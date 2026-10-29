@@ -4,6 +4,7 @@ import runExtension from "roamjs-components/util/runExtension";
 import { render as renderToast } from "roamjs-components/components/Toast";
 import App from "~/App";
 import { applyStyles, Library, readLibrary, storageKey } from "~/model";
+import { registerCommands } from "~/commands";
 import styles from "~/styles";
 
 export default runExtension(async ({ extensionAPI }) => {
@@ -92,27 +93,11 @@ export default runExtension(async ({ extensionAPI }) => {
       },
     ],
   });
-  extensionAPI.ui.commandPalette.addCommand({
-    label: "Custom CSS Toggle: Open editor",
-    callback: () => handlers.open(),
+  await registerCommands({
+    commandPalette: extensionAPI.ui.commandPalette,
+    open: () => handlers.open(),
+    pause: () => handlers.emergency(),
   });
-  extensionAPI.ui.commandPalette.addCommand({
-    label: "Custom CSS Toggle: Pause all CSS",
-    callback: () => handlers.emergency(),
-  });
-  const emergencyKey = (e: KeyboardEvent): void => {
-    if (
-      (e.ctrlKey || e.metaKey) &&
-      e.altKey &&
-      e.shiftKey &&
-      e.code === "KeyC"
-    ) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      handlers.emergency();
-    }
-  };
-  window.addEventListener("keydown", emergencyKey, true);
   // A graph/account switch must not carry this user's styles into another context.
   const identityWatch = window.setInterval(() => {
     if (!sameIdentity()) cssHost.replaceChildren();
@@ -120,7 +105,6 @@ export default runExtension(async ({ extensionAPI }) => {
   return {
     unload: () => {
       window.clearInterval(identityWatch);
-      window.removeEventListener("keydown", emergencyKey, true);
       ReactDOM.unmountComponentAtNode(root);
       root.remove();
       cssHost.remove();

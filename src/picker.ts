@@ -6,20 +6,19 @@ export const getSelector = (element: Element): string => {
   if (element.id && unique(`#${escape(element.id)}`))
     return `#${escape(element.id)}`;
   const classes = Array.from(element.classList).filter(
-    (c) => !/^(hover:|focus:|active$|bp3-active$)/.test(c),
+    (name) =>
+      !/(^|:)(hover|focus|focus-visible|focus-within|active|disabled|visited|checked):/.test(
+        name,
+      ) &&
+      !/^(active|selected|focused|hover|disabled|bp3-(active|selected|disabled|focused))$/.test(
+        name,
+      ),
   );
-  // Native Roam classes are more stable than utility or state classes.
+  // Repeated native classes let a stylesheet target the same UI across pages.
   classes.sort(
     (a, b) => Number(b.startsWith("rm-")) - Number(a.startsWith("rm-")),
   );
-  for (const name of classes) {
-    const selector = `.${escape(name)}`;
-    if (unique(selector)) return selector;
-  }
-  if (classes.length) {
-    const combined = classes.map((c) => `.${escape(c)}`).join("");
-    if (unique(combined)) return combined;
-  }
+  if (classes.length) return `.${escape(classes[0])}`;
   const path: string[] = [];
   let current: Element | null = element;
   while (current) {

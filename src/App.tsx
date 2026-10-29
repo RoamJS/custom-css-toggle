@@ -14,6 +14,7 @@ import {
   Tabs,
 } from "@blueprintjs/core";
 import CodeEditor from "~/CodeEditor";
+import LibraryPanel from "~/LibraryPanel";
 import { createSheet, Dock, Library, Preview, Stylesheet } from "~/model";
 import {
   readDeclarations,
@@ -248,6 +249,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
           selector: selector.trim(),
           property,
           value,
+          forceImportant: true,
         }),
       );
     } catch (e) {
@@ -384,7 +386,6 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
             onKeyDown={resizeKey}
           />
           <div className="cct-toolbar">
-            <span className="cct-personal">Only you · this browser</span>
             <HTMLSelect
               aria-label="Editor position"
               value={library.dock}
@@ -421,7 +422,13 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
             </Callout>
           )}
           <div className="cct-layout">
-            <aside className="cct-library" aria-label="Stylesheets">
+            <LibraryPanel
+              size={library.librarySize}
+              cancelEpoch={renderEpoch}
+              onResize={(librarySize) =>
+                persist((current) => ({ ...current, librarySize }))
+              }
+            >
               <div className="cct-library-heading">
                 <strong>Stylesheets</strong>
                 <Button
@@ -461,6 +468,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                       minimal
                       active={selectedId === sheet.id}
                       text={sheet.name}
+                      title={sheet.name}
                       onClick={() =>
                         guard(() => {
                           pickerCleanup.current?.();
@@ -516,7 +524,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                 Enabled files stack in list order. Styles stay out of the shared
                 roam/css page.
               </p>
-            </aside>
+            </LibraryPanel>
             <main className="cct-workspace">
               {!selected ? (
                 <div className="cct-welcome">
@@ -648,8 +656,9 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                           )}
                           <p className="cct-help">
                             Values such as 16px, 1.6, 12px 24px, or #336699
-                            apply as you type. Clear a value to remove that
-                            override. Use CSS source for advanced rules.
+                            apply as you type and override Roam’s theme. Clear a
+                            value to remove that override. Use CSS source for
+                            advanced rules.
                           </p>
                         </div>
                       }
@@ -674,9 +683,11 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
                   )}
                   <div className="cct-actions">
                     <span>
-                      {selected.enabled
-                        ? "Enabled after closing"
-                        : "Disabled after closing"}
+                      {library.suspended
+                        ? "All styles paused"
+                        : selected.enabled
+                          ? "On · saved styles stay applied"
+                          : "Off · turn on its switch to keep styles applied"}
                     </span>
                     <Button
                       outlined
@@ -702,7 +713,7 @@ const App = ({ initial, save, apply, register }: Props): React.ReactElement => {
             </main>
           </div>
           <footer className="cct-footer">
-            Emergency pause: Ctrl/⌘ + Alt + Shift + C
+            Pause all CSS: customize in Roam Settings → Hotkeys
           </footer>
         </div>
       </Drawer>
