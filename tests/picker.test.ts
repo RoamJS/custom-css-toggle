@@ -39,6 +39,67 @@ describe("reusable picker selectors", () => {
     expect(document.querySelector(getSelector(title))).toBe(title);
   });
 
+  it("picks the semantic title when regular page titles wrap their text in plain spans", () => {
+    document.body.innerHTML = `
+      <h1 class="rm-title-display" style="font-size:32px;padding:12px">
+        <span><span>October 28th</span></span>
+      </h1>
+      <h1 class="rm-title-display">October 27th</h1>`;
+    const title = document.querySelector("h1")!;
+    const text = title.querySelector("span span")!;
+    expect(getSelector(text)).toBe(".rm-title-display");
+    title.getBoundingClientRect = () => ({
+      x: 10,
+      y: 20,
+      left: 10,
+      top: 20,
+      right: 210,
+      bottom: 60,
+      width: 200,
+      height: 40,
+      toJSON: () => ({}),
+    });
+    let picked: PickedElement | undefined;
+    startPicker({
+      onPick: (value) => {
+        picked = value;
+      },
+      onEnd: () => undefined,
+    });
+
+    text.dispatchEvent(new MouseEvent("pointermove", { bubbles: true }));
+    const highlight = document.querySelector<HTMLElement>(".cct-highlight")!;
+    expect(highlight.style.left).toBe("10px");
+    expect(highlight.style.width).toBe("200px");
+    text.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(picked).toMatchObject({
+      selector: ".rm-title-display",
+      matches: 2,
+      computed: { "font-size": "32px", padding: "12px" },
+    });
+    expect(document.querySelector(".cct-highlight")).toBeNull();
+  });
+
+  it("preserves directly targeted title descendants with their own identity or styling", () => {
+    document.body.innerHTML = `
+      <h1 class="rm-title-display">
+        <span id="title-fragment">ID</span>
+        <span class="rm-page-ref">Class</span>
+        <span style="color:red">Styled</span>
+        <em>Emphasized</em>
+      </h1>
+      <div><span>Outside the title</span></div>`;
+    expect(getSelector(document.querySelector("#title-fragment")!)).toBe(
+      "#title-fragment",
+    );
+    expect(getSelector(document.querySelector(".rm-page-ref")!)).toBe(
+      ".rm-page-ref",
+    );
+    for (const element of document.querySelectorAll("[style], em, div span")) {
+      expect(document.querySelector(getSelector(element))).toBe(element);
+    }
+  });
+
   it("ignores transient classes and escapes a reusable class", () => {
     document.body.innerHTML = `
       <p class="active bp3-active md:hover:text-red focus-visible:ring-2 1:label"></p>
@@ -78,6 +139,61 @@ describe("reusable picker selectors", () => {
     stop();
     expect(ended).toBe(1);
   });
+
+  it.each(["pick", "Escape", "cancel"] as const)(
+    "prevents native editing presses and restores them after %s",
+    (finish) => {
+      document.body.innerHTML = `
+        <div class="cct-portal"><button>Cancel selection</button></div>
+        <h1 class="rm-title-display"><span>October 28th</span></h1>`;
+      const title = document.querySelector("h1")!;
+      const text = title.querySelector("span")!;
+      const editorButton = document.querySelector("button")!;
+      let nativeEditing = 0,
+        editorPresses = 0,
+        picked = 0,
+        ended = 0;
+      for (const type of ["pointerdown", "mousedown"]) {
+        title.addEventListener(type, () => nativeEditing++);
+        editorButton.addEventListener(type, () => editorPresses++);
+      }
+      const stop = startPicker({
+        onPick: () => picked++,
+        onEnd: () => ended++,
+      });
+
+      for (const type of ["pointerdown", "mousedown"]) {
+        const pagePress = new MouseEvent(type, {
+          bubbles: true,
+          cancelable: true,
+        });
+        text.dispatchEvent(pagePress);
+        expect(pagePress.defaultPrevented).toBe(true);
+        const editorPress = new MouseEvent(type, {
+          bubbles: true,
+          cancelable: true,
+        });
+        editorButton.dispatchEvent(editorPress);
+        expect(editorPress.defaultPrevented).toBe(false);
+      }
+      expect([nativeEditing, editorPresses]).toEqual([0, 2]);
+
+      if (finish === "pick") text.click();
+      else if (finish === "Escape")
+        document.dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+        );
+      else stop();
+
+      for (const type of ["pointerdown", "mousedown"])
+        text.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+      stop();
+      expect(nativeEditing).toBe(2);
+      expect(ended).toBe(1);
+      expect(picked).toBe(finish === "pick" ? 1 : 0);
+      expect(document.querySelector(".cct-highlight")).toBeNull();
+    },
+  );
 
   it("leaves editor clicks alone and cancels once on blur", () => {
     document.body.innerHTML =
