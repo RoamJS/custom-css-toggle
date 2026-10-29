@@ -46,7 +46,10 @@ describe("personal library", () => {
     expect(() =>
       readLibrary(JSON.stringify({ ...library, sheets: [sheet, sheet] })),
     ).toThrow();
-    expect(readLibrary(null).sheets).toEqual([]);
+    expect(readLibrary(null).sheets.map((s) => s.name)).toEqual([
+      "Hide Roam Sidebar Logo",
+      "Hide Topbar Icons",
+    ]);
   });
   it("applies only enabled styles in order; preview is temporary; pause removes everything", () => {
     const host = document.createElement("div");

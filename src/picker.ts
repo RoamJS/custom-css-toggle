@@ -139,6 +139,7 @@ export const startPicker = ({
       "margin",
       "border-radius",
       "width",
+      "display",
     ])
       computed[prop] = style.getPropertyValue(prop);
     stop();

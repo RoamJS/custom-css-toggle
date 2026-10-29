@@ -1,9 +1,22 @@
 export default `
 .cct-portal .bp3-overlay { pointer-events: none; }
-.cct-portal .cct-drawer { pointer-events: auto; color: #182026; background: #fff; z-index: 30; }
-.cct-drawer .bp3-drawer-header { padding: 12px 16px; box-shadow: 0 1px 0 #d8e1e8; }
+.cct-portal .cct-drawer { pointer-events: auto; color: #182026; background: #fff; z-index: 19; }
+.cct-editor-header { height: 48px; min-height: 48px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid #d8e1e8; }
+.cct-editor-title { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.cct-editor-title h4 { min-width: 0; margin: 0; font-size: 16px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cct-editor-title > .bp3-icon { flex-shrink: 0; color: #5c7080; }
+.cct-editor-header > .bp3-button { flex-shrink: 0; }
+.cct-popout { position: fixed; z-index: 19; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; color: #182026; background: #fff; border: 1px solid #ced9e0; border-radius: 6px; box-shadow: 0 4px 8px rgba(16,22,26,.2), 0 18px 46px 6px rgba(16,22,26,.2); pointer-events: auto; }
+.cct-popout-header .cct-popout-move { flex: 1; min-width: 0; justify-content: flex-start; cursor: grab; touch-action: none; user-select: none; font-size: 16px; font-weight: 600; }
+.cct-popout-move .bp3-button-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cct-popout-header .cct-popout-move:hover, .cct-popout-header .cct-popout-move:active { background: transparent; box-shadow: none; }
+.cct-popout-header .cct-popout-move:active { cursor: grabbing; }
+.cct-popout-content { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+.cct-popout-content > .cct-shell { flex: 1; min-width: 0; min-height: 0; height: auto; }
+.cct-popout .cct-popout-resize { position: absolute; right: 1px; bottom: 1px; cursor: nwse-resize; touch-action: none; }
+.cct-popout .cct-footer { padding-right: 28px; }
 .cct-shell { display: flex; flex-direction: column; height: 100%; min-height: 0; position: relative; font-size: 13px; }
-.cct-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid #d8e1e8; }
+.cct-toolbar { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .cct-layout { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 .cct-library { box-sizing: border-box; flex-shrink: 0; display: flex; flex-direction: column; padding: 12px 8px; gap: 10px; background: #f6f8fa; }
 .cct-library-resize { flex: 0 0 6px; background: #f6f8fa; border-right: 1px solid #d8e1e8; cursor: ew-resize; touch-action: none; }
@@ -20,11 +33,17 @@ export default `
 .cct-workspace { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 12px; gap: 12px; }
 .cct-file-heading { display: flex; gap: 4px; }
 .cct-file-heading .bp3-input-group { flex: 1; min-width: 0; }
+.cct-description { flex-shrink: 0; }
+.cct-description summary { color: #5c7080; cursor: pointer; width: fit-content; display: flex; align-items: center; gap: 6px; list-style: none; }
+.cct-description summary::before { content: "›"; font-size: 16px; line-height: 1; }
+.cct-description[open] summary::before { transform: rotate(90deg); }
+.cct-description textarea { margin-top: 8px; resize: vertical; max-height: 160px; }
+.cct-sheet-shortcut.bp3-switch { margin: 0; }
 .cct-preview-row { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .cct-preview-row .bp3-switch { margin: 0; }
 .cct-preview-row span { color: #526b7a; font-size: 11px; }
 .cct-workspace > .bp3-tabs { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.cct-workspace .bp3-tab-panel { flex: 1; min-height: 0; overflow: auto; margin-top: 12px; }
+.cct-workspace .bp3-tab-panel { flex: 1; min-height: 0; overflow: auto; margin-top: 12px; padding: 4px; box-sizing: border-box; scroll-padding: 4px; }
 .cct-code { height: 100%; min-height: 150px; border: 1px solid #ced9e0; border-radius: 4px; overflow: hidden; }
 .cct-visual { display: flex; flex-direction: column; gap: 12px; }
 .cct-visual .bp3-form-group { margin: 0; }

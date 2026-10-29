@@ -3,13 +3,24 @@ export default {
   runtimeNames: ["custom-css-toggle"],
   settingsTab: "Custom CSS Toggle",
   async run({ page }) {
+    const permissionNotice = page.locator(".bp3-toast").filter({
+      hasText:
+        "developer extensions from your file system need permission to load",
+    });
+    if (await permissionNotice.count())
+      await permissionNotice
+        .getByRole("button", { name: "Close", exact: true })
+        .click();
     const pauseShortcut =
       process.platform === "darwin"
         ? "Meta+Alt+Shift+KeyC"
         : "Control+Alt+Shift+KeyC";
     const name = `Resize pause proof ${Date.now()}`;
-    const drawer = page.locator(".cct-drawer");
-    if (!(await drawer.count())) {
+    const editor = page.getByRole("dialog", {
+      name: "Custom CSS Toggle",
+      exact: true,
+    });
+    if (!(await editor.count())) {
       await page.keyboard.press(
         process.platform === "darwin" ? "Meta+p" : "Control+p",
       );
@@ -29,12 +40,19 @@ export default {
         .getByRole("button", { name: "Resume CSS", exact: true })
         .click();
     const previousDock = await page
-      .locator('select[aria-label="Editor position"]')
-      .inputValue();
+      .getByRole("group", { name: "Editor position", exact: true })
+      .locator('[aria-pressed="true"]')
+      .getAttribute("aria-label");
+    if (!previousDock) throw new Error("Active editor position is missing");
     const previousName = await page
       .getByRole("textbox", { name: "Stylesheet name" })
       .inputValue()
       .catch(() => "");
+    const previousIndex = await page
+      .locator(".cct-sheet")
+      .evaluateAll((rows) =>
+        rows.findIndex((row) => row.classList.contains("cct-selected")),
+      );
     await page
       .getByRole("button", { name: "New stylesheet", exact: true })
       .click();
@@ -46,8 +64,8 @@ export default {
         .fill("body { --cct-resize-proof: 1; }");
       await page.getByRole("button", { name: "Save", exact: true }).click();
       await page
-        .locator('select[aria-label="Editor position"]')
-        .selectOption("right");
+        .getByRole("button", { name: "Dock right", exact: true })
+        .click();
       await page.waitForFunction(() =>
         document
           .querySelector("[data-cct-styles]")
@@ -153,6 +171,9 @@ export default {
         emergencyDuringDelayedImport: "passed",
         stylesAfterRelease: styles,
       };
+    } catch (error) {
+      console.error("Resize/pause regression failed:", error.message);
+      throw error;
     } finally {
       await page.evaluate(() => {
         if (window.__cctOriginalFileText)
@@ -161,6 +182,8 @@ export default {
         delete window.__cctReleaseImport;
       });
       await page.mouse.up();
+      const cancel = page.getByRole("button", { name: "Cancel", exact: true });
+      if (await cancel.count()) await cancel.click();
       if (
         await page
           .getByRole("button", { name: "Resume CSS", exact: true })
@@ -185,10 +208,12 @@ export default {
           .click();
       }
       await page
-        .locator('select[aria-label="Editor position"]')
-        .selectOption(previousDock);
+        .getByRole("button", { name: previousDock, exact: true })
+        .click();
       if (previousName)
         await page
+          .locator(".cct-sheet")
+          .nth(previousIndex)
           .getByRole("button", { name: previousName, exact: true })
           .click();
       if (wasPaused)

@@ -17,24 +17,24 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "roamjs-components": "^0.86.4",
-    "codemirror": "^6.0.2",
-    "@codemirror/lang-css": "^6.3.1",
-    "@codemirror/view": "^6.38.6",
-    "@codemirror/state": "^6.5.2",
-    "postcss": "^8.5.6",
     "@blueprintjs/core": "3.50.4",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.6",
+    "codemirror": "^6.0.2",
+    "postcss": "^8.5.32",
     "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react-dom": "17.0.2",
+    "roamjs-components": "^0.86.4"
   },
   "devDependencies": {
+    "@types/react": "17.0.39",
+    "@types/react-dom": "17.0.13",
+    "jsdom": "^20.0.3",
     "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "vitest": "^3.2.4",
-    "jsdom": "^20.0.3",
     "typescript": "^5.9.3",
-    "@types/react": "17.0.39",
-    "@types/react-dom": "17.0.13"
+    "vitest": "^3.2.4"
   },
   "samepage": {
     "external": [

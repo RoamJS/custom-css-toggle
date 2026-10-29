@@ -119,7 +119,7 @@ describe("reusable picker selectors", () => {
 
   it("reports every class match while reading the clicked title's computed style", () => {
     document.body.innerHTML =
-      '<h1 class="rm-title-display" style="font-size:24px">First</h1><h1 class="rm-title-display" style="font-size:32px">Second</h1>';
+      '<h1 class="rm-title-display" style="font-size:24px">First</h1><h1 class="rm-title-display" style="font-size:32px;display:inline-flex">Second</h1>';
     let picked: PickedElement | undefined;
     let ended = 0;
     const stop = startPicker({
@@ -133,7 +133,7 @@ describe("reusable picker selectors", () => {
     expect(picked).toMatchObject({
       selector: ".rm-title-display",
       matches: 2,
-      computed: { "font-size": "32px" },
+      computed: { "font-size": "32px", display: "inline-flex" },
     });
     expect(document.querySelector(".cct-highlight")).toBeNull();
     stop();
